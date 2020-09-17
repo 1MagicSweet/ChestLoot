@@ -10,20 +10,22 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.magicsweet.chestloot.Exception.IllegalLocationException;
+import com.magicsweet.chestloot.Item.ItemType;
 import com.magicsweet.chestloot.Item.LootableItem;
 import com.magicsweet.chestloot.Main.Main;
 import com.magicsweet.chestloot.Util.RandomNumber;
@@ -51,12 +53,15 @@ public class ChestsFillCommand {
 		}
 		arguments.put("lootConfig", new TextArgument().overrideSuggestions(paths.toArray(new String[paths.size()])));
 		
-		List<String> worlds = new ArrayList<String>();
-		for (World name : Main.getPlugin(Main.class).getServer().getWorlds()) {
-			worlds.add(name.getName());
-		}
-		arguments.put("map", new StringArgument().overrideSuggestions(worlds.toArray(new String[worlds.size()])));
-		
+
+		arguments.put("map", new StringArgument().overrideSuggestions((sender, args) -> {
+			List<String> worlds = new ArrayList<String>();
+			for (World name : Main.getPlugin(Main.class).getServer().getWorlds()) {
+				worlds.add(name.getName());
+			}
+			return worlds.toArray(new String[worlds.size()]);
+			
+		}));
 
 		
 		//register the command
@@ -107,7 +112,6 @@ public class ChestsFillCommand {
 	    						int rollCount;
 	    						rollCount = loot.getInt("island_chests.dependable_items." + keyd + ".max_item_count");
 	    						if (rollCount == 0) rollCount = 1;
-	    						System.out.println(rollCount);
     							List<Integer> ints = new RandomNumber().generateCompleteInts(1, loot.getStringList("island_chests.dependable_items." + keyd + ".items").size(), rollCount).stream().collect(Collectors.toList());	    						
 	    						for (int t = 0; t < rollCount; t++) {
 	    							String[] e = loot.getStringList("island_chests.dependable_items." + keyd + ".items").get(ints.get(t) - 1).replace(", ", ",").split(",");
@@ -125,8 +129,20 @@ public class ChestsFillCommand {
 	    				}
 	    		}
 	    	}
-	    		for (String configEntry : loot.getStringList("categorized_items")) {
-	    				//TODO
+	    		for (String configEntry : loot.getStringList("categorized_items.items")) {
+	    			if (configEntry.startsWith("[type:")) {
+	    				List<ItemStack> i = new ItemType(configEntry).getFinalStack();
+	    				i.forEach((item) -> {
+	    					rolledItems.add(item);
+	    				});
+	    			} else {
+	    				String[] prms = configEntry.replace(", ", ",").split(",");
+	    				if (prms.length == 2) {
+	    					rolledItems.add(new LootableItem(prms[0], prms[1]).getItemStack(false));
+	    				} else {
+	    					rolledItems.add(new LootableItem(prms[0], prms[1], "1%", prms[2] + "," + prms[3]).getItemStack(false));
+	    				}
+	    			}
 	    		}
 	    		
 		    	for (String key : data.getConfigurationSection("island_chests." + args[1]).getKeys(false)) {
@@ -160,15 +176,16 @@ public class ChestsFillCommand {
 		    	for (ItemStack item : items) {
 		    		int chestNum = new RandomNumber().generateInt(0, chests.size() - 1);
 		    		int chestSlot = new RandomNumber().generateInt(0, 26);
-		    		System.out.println(chests.get(chestNum).getInventory().getContents());
 		    		while (chests.get(chestNum).getInventory().getContents()[chestSlot] != null) {
 		    			chestSlot = new RandomNumber().generateInt(0, 26);
 		    		}
 		    		chests.get(chestNum).getInventory().setItem(chestSlot, item);
 		    	}
+		    	
+		    	
+		    	//TODO middle chests in other PRIVATE method
 		    	}
 		    
-				System.out.println(chestCount[0] + " " + chestCount[1]);
 		    } else {
 		    	sender.sendMessage("§cUnknown dimension: " + args[1]);
 		    }	
@@ -181,19 +198,14 @@ public class ChestsFillCommand {
 	    } catch (NullPointerException e) {
 	    	e.printStackTrace();
 	    }
+	    if (sender instanceof Player) {
+	    Player player = (Player) sender;
+	    
+	    player.playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 10, 1);
+	    }
 	    })
 	    .register();
 	}
-	private boolean dependable_isKeysMatching() {
-		
-		return false;
-		
-	}
 	
 	
-	private ItemStack dependable_getItemStack() {
-		
-		return null;
-		
-	}
 }

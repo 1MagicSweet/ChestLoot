@@ -1,6 +1,6 @@
 name: ChestLoot
 author: MagicSweet
-version: 0.1.1-beta
+version: 1.0.2-beta
 main: com.magicsweet.chestloot.Main.Main
 depend: [CommandAPI]
 api-version: 1.16

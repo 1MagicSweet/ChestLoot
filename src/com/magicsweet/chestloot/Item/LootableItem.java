@@ -96,7 +96,12 @@ public class LootableItem {
 		String[] itemDataValuesTemp = data[1].toString().replace("; ", ";").replace("'", "").split(";");
 		if (itemData.length == itemDataValuesTemp.length) {
 			for (int t = 0; t < itemData.length; t++) {
-			String[] itemDataValues = itemDataValuesTemp[t].split(" ");
+				String str = null;
+			if (itemDataValuesTemp[t].split(" ").length == 2) 
+				str = itemDataValuesTemp[t] + " true";
+			else
+				str = itemDataValuesTemp[t];
+			String[] itemDataValues = str.split(" ");
 				if (itemData[t].equals("Enchantment")) {
 					meta.addEnchant(Enchantment.getByKey(NamespacedKey.minecraft(itemDataValues[0].replace("minecraft:", ""))), Integer.parseInt(itemDataValues[1]), Boolean.parseBoolean(itemDataValues[2]));
 				} else if (itemData[t].equals("CustomEffects")) {

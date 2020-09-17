@@ -37,7 +37,9 @@ public class RandomNumber {
 	public Collection<Integer> generateCompleteInts(int min, int max, int count) {
 		//not the most effective but works
 		Collection<Integer> collection = new ArrayList<Integer>();
+		for (int t = 0; t < count; t++) {
 		collection.add(ThreadLocalRandom.current().nextInt(min, max + 1));
+		}
 				return collection;
 
 
